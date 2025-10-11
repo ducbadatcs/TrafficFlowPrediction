@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
-def process_data(train, test, lags):
+def process_data(train: str, test: str, lags: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, StandardScaler]:
     """Process data
     Reshape and split train\test data.
 
@@ -46,3 +46,11 @@ def process_data(train, test, lags):
     y_test = test[:, -1]
 
     return X_train, y_train, X_test, y_test, scaler
+
+if __name__ == "__main__":
+    X_train, y_train, X_test, y_test, scaler = process_data("./train.csv", "./test.csv", 12)
+    # print(X_train.shape)
+    print("Shape of X_train:", X_train.shape)
+print("Shape of X_test:", X_test.shape)
+print("Shape of y_train:", y_train.shape)
+print("Shape of y_test:", y_test.shape)

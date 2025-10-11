@@ -1,0 +1,8 @@
+scikit-learn
+tensorflow
+torch 
+pandas
+ipython
+tqdm
+ipykernel
+ipywidgets
