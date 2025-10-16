@@ -49,7 +49,7 @@ def train_model(model: keras.Sequential, X_train: np.ndarray, y_train: np.ndarra
     
 
 
-def train_seas(models: List[keras.Sequential], X_train: np.ndarray, y_train: np.ndarray, name:str , config: dict[str, Any]):
+def train_seas(models: List[keras.Sequential], X_train: np.ndarray, y_train: np.ndarray, name:str , config: dict[str, Any]) -> None:
     """train
     train the SAEs model.
 
@@ -86,6 +86,16 @@ def train_seas(models: List[keras.Sequential], X_train: np.ndarray, y_train: np.
         saes.get_layer(f'hidden{i + 1}').set_weights(weights)
 
     train_model(saes, X_train, y_train, name, config)
+    
+def plot_loss(model_name: str) -> None:
+    df = pd.read_csv(f"model/{model_name}_loss.csv")
+    plt.title(f"{model_name.upper()} model training loss over time")
+    plt.xlabel("Epoch")
+    plt.ylabel("loss")
+    plt.legend()
+    plt.plot(np.arange(len(df["loss"][1:])), df["loss"][1:], label="MSE Loss")
+    plt.savefig(f"model/{model_name}_loss_graph.png")
+    
 
 
 def main(argv):
@@ -107,18 +117,22 @@ def main(argv):
         X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
         m = model.get_lstm([lag, 64, 64, 1])
         train_model(m, X_train, y_train, args.model, config)
+        plot_loss(args.model)
     elif args.model == 'gru':
         X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
         m = model.get_gru([lag, 64, 64, 1])
         train_model(m, X_train, y_train, args.model, config)
+        plot_loss(args.model)
     elif args.model == 'saes':
         X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1]))
         m = model.get_saes([lag, 400, 400, 400, 1])
         train_seas(m, X_train, y_train, args.model, config)
+        plot_loss(args.model)
     elif args.model == "cnn":
         X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
         m = model.get_cnn([lag, 64, 64, 1])
         train_model(m, X_train, y_train, args.model, config)
+        plot_loss(args.model)
     
 
 
