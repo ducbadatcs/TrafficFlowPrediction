@@ -7,14 +7,16 @@ import numpy as np
 import pandas as pd
 from data.data import process_data
 from keras.models import load_model
-from keras.utils.vis_utils import plot_model
+from keras.utils import plot_model
 import sklearn.metrics as metrics
-import matplotlib as mpl
+
+from matplotlib.dates import AutoDateFormatter
 import matplotlib.pyplot as plt
+from typing import Any
 warnings.filterwarnings("ignore")
 
 
-def MAPE(y_true, y_pred):
+def MAPE(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Mean Absolute Percentage Error
     Calculate the mape.
 
@@ -26,10 +28,10 @@ def MAPE(y_true, y_pred):
     """
 
     y = [x for x in y_true if x > 0]
-    y_pred = [y_pred[i] for i in range(len(y_true)) if y_true[i] > 0]
+    y_pred = np.array([y_pred[i] for i in range(len(y_true)) if y_true[i] > 0])
 
-    num = len(y_pred)
-    sums = 0
+    num: int = len(y_pred)
+    sums: float = 0
 
     for i in range(num):
         tmp = abs(y[i] - y_pred[i]) / y[i]
@@ -62,7 +64,7 @@ def eva_regress(y_true, y_pred):
     print('r2:%f' % r2)
 
 
-def plot_results(y_true, y_preds, names):
+def plot_results(y_true: np.ndarray, y_preds: np.ndarray, names: list[Any]):
     """Plot
     Plot the true data and predicted data.
 
@@ -86,7 +88,7 @@ def plot_results(y_true, y_preds, names):
     plt.xlabel('Time of Day')
     plt.ylabel('Flow')
 
-    date_format = mpl.dates.DateFormatter("%H:%M")
+    date_format = AutoDateFormatter("%H:%M")
     ax.xaxis.set_major_formatter(date_format)
     fig.autofmt_xdate()
 
@@ -94,11 +96,12 @@ def plot_results(y_true, y_preds, names):
 
 
 def main():
-    lstm = load_model('model/lstm.h5')
-    gru = load_model('model/gru.h5')
-    saes = load_model('model/saes.h5')
-    models = [lstm, gru, saes]
-    names = ['LSTM', 'GRU', 'SAEs']
+    lstm = load_model('model/lstm.keras')
+    gru = load_model('model/gru.keras')
+    saes = load_model('model/saes.keras')
+    cnn = load_model("model/cnn.keras")
+    models = [lstm, gru, saes, cnn]
+    names = ['LSTM', 'GRU', 'SAEs', "Cnn"]
 
     lag = 12
     file1 = 'data/train.csv'
@@ -120,7 +123,7 @@ def main():
         print(name)
         eva_regress(y_test, predicted)
 
-    plot_results(y_test[: 288], y_preds, names)
+    plot_results(y_test[: 288], np.array(y_preds), names)
 
 
 if __name__ == '__main__':

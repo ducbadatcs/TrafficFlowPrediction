@@ -2,11 +2,11 @@
 Defination of NN model
 """
 from keras.layers import Dense, Dropout, Activation
-from keras.layers import LSTM, GRU
+from keras.layers import LSTM, GRU, Conv1D, GlobalAveragePooling1D, MultiHeadAttention
 from keras.models import Sequential
+from keras import Model, Input
 
-
-def get_lstm(units):
+def get_lstm(units: list[int]):
     """LSTM(Long Short-Term Memory)
     Build LSTM Model.
 
@@ -25,7 +25,7 @@ def get_lstm(units):
     return model
 
 
-def get_gru(units):
+def get_gru(units: list[int]):
     """GRU(Gated Recurrent Unit)
     Build GRU Model.
 
@@ -44,7 +44,7 @@ def get_gru(units):
     return model
 
 
-def _get_sae(inputs, hidden, output):
+def _get_sae(inputs: int, hidden: int, output: int) -> Sequential:
     """SAE(Auto-Encoders)
     Build SAE Model.
 
@@ -56,16 +56,17 @@ def _get_sae(inputs, hidden, output):
         model: Model, nn model.
     """
 
-    model = Sequential()
-    model.add(Dense(hidden, input_dim=inputs, name='hidden'))
-    model.add(Activation('sigmoid'))
-    model.add(Dropout(0.2))
-    model.add(Dense(output, activation='sigmoid'))
+    model = Sequential([
+        Input(shape=(inputs,)),
+        Dense(hidden, name="hidden"),
+        Dropout(0.2),
+        Dense(output, activation="sigmoid")
+    ])
 
     return model
 
 
-def get_saes(layers):
+def get_saes(layers: list[int]):
     """SAEs(Stacked Auto-Encoders)
     Build SAEs Model.
 
@@ -78,16 +79,37 @@ def get_saes(layers):
     sae2 = _get_sae(layers[1], layers[2], layers[-1])
     sae3 = _get_sae(layers[2], layers[3], layers[-1])
 
-    saes = Sequential()
-    saes.add(Dense(layers[1], input_dim=layers[0], name='hidden1'))
-    saes.add(Activation('sigmoid'))
-    saes.add(Dense(layers[2], name='hidden2'))
-    saes.add(Activation('sigmoid'))
-    saes.add(Dense(layers[3], name='hidden3'))
-    saes.add(Activation('sigmoid'))
-    saes.add(Dropout(0.2))
-    saes.add(Dense(layers[4], activation='sigmoid'))
+    saes = Sequential([
+        Input(shape=(layers[0],)),
+        Dense(layers[1], name="hidden1"), Activation("sigmoid"),
+        Dense(layers[2], name="hidden2"), Activation("sigmoid"),
+        Dense(layers[3], name="hidden3"), Activation("sigmoid"),
+        Dropout(0.2),
+        Dense(layers[4], activation="sigmoid")
+    ])
+    # saes.add(Dense(layers[1], input_dim=layers[0], name='hidden1'))
+    # saes.add(Activation('sigmoid'))
+    # saes.add(Dense(layers[2], name='hidden2'))
+    # saes.add(Activation('sigmoid'))
+    # saes.add(Dense(layers[3], name='hidden3'))
+    # saes.add(Activation('sigmoid'))
+    # saes.add(Dropout(0.2))
+    # saes.add(Dense(layers[4], activation='sigmoid'))
 
     models = [sae1, sae2, sae3, saes]
 
     return models
+
+# extra models
+
+
+def get_cnn(units: list[int]) -> Sequential:
+    model = Sequential([
+        Conv1D(32, 3, padding="causal", activation="relu", input_shape=(units[0], 1)),
+        Conv1D(64, 3, padding='causal', activation='relu'),
+        GlobalAveragePooling1D(),
+        Dropout(0.2),
+        Dense(units[3], activation='sigmoid')
+    ])
+    
+    return model

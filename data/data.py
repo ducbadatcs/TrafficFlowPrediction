@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
-def process_data(train: str, test: str, lags: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, StandardScaler]:
+def process_data(train_csv: str, test_csv: str, lags: int, shuffle: bool = True) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, MinMaxScaler]:
     """Process data
     Reshape and split train\test data.
 
@@ -22,8 +22,8 @@ def process_data(train: str, test: str, lags: int) -> tuple[np.ndarray, np.ndarr
         scaler: StandardScaler.
     """
     attr = 'Lane 1 Flow (Veh/5 Minutes)'
-    df1 = pd.read_csv(train, encoding='utf-8').fillna(0)
-    df2 = pd.read_csv(test, encoding='utf-8').fillna(0)
+    df1 = pd.read_csv(train_csv, encoding='utf-8').fillna(0)
+    df2 = pd.read_csv(test_csv, encoding='utf-8').fillna(0)
 
     # scaler = StandardScaler().fit(df1[attr].values)
     scaler = MinMaxScaler(feature_range=(0, 1)).fit(df1[attr].values.reshape(-1, 1))
@@ -38,7 +38,7 @@ def process_data(train: str, test: str, lags: int) -> tuple[np.ndarray, np.ndarr
 
     train = np.array(train)
     test = np.array(test)
-    np.random.shuffle(train)
+    if shuffle: np.random.shuffle(train)
 
     X_train = train[:, :-1]
     y_train = train[:, -1]
@@ -48,9 +48,14 @@ def process_data(train: str, test: str, lags: int) -> tuple[np.ndarray, np.ndarr
     return X_train, y_train, X_test, y_test, scaler
 
 if __name__ == "__main__":
-    X_train, y_train, X_test, y_test, scaler = process_data("./train.csv", "./test.csv", 12)
+    X_train, y_train, X_test, y_test, scaler = process_data(
+        "./train.csv", "./test.csv", 10, False)
     # print(X_train.shape)
     print("Shape of X_train:", X_train.shape)
     print("Shape of X_test:", X_test.shape)
     print("Shape of y_train:", y_train.shape)
     print("Shape of y_test:", y_test.shape)
+    print(f"X_train = {X_train}")
+    print(f"y_train = {y_train}")
+    print(f"X_test = {X_test}")
+    print(f"y_test = {y_test}")
