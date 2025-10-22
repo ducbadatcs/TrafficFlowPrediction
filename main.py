@@ -6,7 +6,8 @@ import warnings
 import numpy as np
 import pandas as pd
 from data.data import process_data
-from keras.models import load_model
+# from keras.models import load_model
+from keras.saving import load_model
 from keras.utils import plot_model
 import sklearn.metrics as metrics
 
@@ -100,8 +101,9 @@ def main():
     gru = load_model('model/gru.keras')
     saes = load_model('model/saes.keras')
     cnn = load_model("model/cnn.keras")
+    print(type(lstm))
     models = [lstm, gru, saes, cnn]
-    names = ['LSTM', 'GRU', 'SAEs', "Cnn"]
+    names = ['LSTM', 'GRU', 'SAEs', "CNN"]
 
     lag = 12
     file1 = 'data/train.csv'

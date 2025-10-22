@@ -17,7 +17,8 @@ def get_lstm(units: list[int]):
     """
 
     model = Sequential([
-        LSTM(units[1], input_shape=(units[0], 1), return_sequences=True),
+        Input(shape=(units[0], 1)),
+        LSTM(units[1], return_sequences=True),
         LSTM(units[2]),
         Dropout(0.2),
         Dense(units[3], activation='sigmoid')
@@ -37,7 +38,8 @@ def get_gru(units: list[int]):
     """
 
     model = Sequential([
-        GRU(units[1], input_shape=(units[0], 1), return_sequences=True),
+        Input(shape=(units[0], 1)),
+        GRU(units[1], return_sequences=True),
         GRU(units[2]),
         Dropout(0.2),
         Dense(units[3], activation='sigmoid')
