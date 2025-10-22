@@ -24,20 +24,27 @@ def process_data(train_csv: str, test_csv: str, lags: int, shuffle: bool = True)
     attr = 'Lane 1 Flow (Veh/5 Minutes)'
     df1 = pd.read_csv(train_csv, encoding='utf-8').fillna(0)
     df2 = pd.read_csv(test_csv, encoding='utf-8').fillna(0)
-
+    
+    print("values:", np.array(df1[attr].values))
     # scaler = StandardScaler().fit(df1[attr].values)
-    scaler = MinMaxScaler(feature_range=(0, 1)).fit(df1[attr].values.reshape(-1, 1))
-    flow1 = scaler.transform(df1[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
-    flow2 = scaler.transform(df2[attr].values.reshape(-1, 1)).reshape(1, -1)[0]
+    scaler = MinMaxScaler(feature_range=(0, 1)).fit(np.array(df1[attr].values).reshape(-1, 1))
+    flow1 = scaler.transform(np.array(df1[attr].values).reshape(-1, 1)).reshape(1, -1)[0]
+    flow2 = scaler.transform(np.array(df2[attr].values).reshape(-1, 1)).reshape(1, -1)[0]
+    print("value shapes: ", np.array(df1[attr].values).shape)
+    print("F1:", np.array(flow1).shape)
+    print("F2:", np.array(flow2).shape)
 
-    train, test = [], []
+    train_list, test_list = [], []
     for i in range(lags, len(flow1)):
-        train.append(flow1[i - lags: i + 1])
+        train_list.append(flow1[i - lags: i + 1])
     for i in range(lags, len(flow2)):
-        test.append(flow2[i - lags: i + 1])
+        test_list.append(flow2[i - lags: i + 1])
+        
 
-    train = np.array(train)
-    test = np.array(test)
+    train = np.array(train_list)
+    test = np.array(test_list)
+    print(f"Train:", train)
+    print(f"Test:", test)
     if shuffle: np.random.shuffle(train)
 
     X_train = train[:, :-1]
