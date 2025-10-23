@@ -45,6 +45,8 @@ def process_data(train_csv: str, test_csv: str, lags: int, shuffle: bool = True)
     test = np.array(test_list)
     print(f"Train:", train)
     print(f"Test:", test)
+    print("Train shape:", train.shape)
+    print("Test shape:", test.shape)
     if shuffle: np.random.shuffle(train)
 
     X_train = train[:, :-1]
