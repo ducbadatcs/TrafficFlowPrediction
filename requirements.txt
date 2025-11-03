@@ -6,3 +6,10 @@ ipython
 tqdm
 ipykernel
 ipywidgets
+matplotlib
+keras
+statsmodels
+xlrd
+pyrosm
+requests
+beautifulsoup

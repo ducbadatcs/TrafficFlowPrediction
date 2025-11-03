@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="openstreetmap-cgimap 2.1.0 (2238938 spike-08.openstreetmap.org)" copyright="OpenStreetMap and contributors" attribution="http://www.openstreetmap.org/copyright" license="http://opendatacommons.org/licenses/odbl/1-0/">
+ <relation id="2404473" visible="true" version="23" changeset="144611524" timestamp="2023-11-30T05:16:32Z" user="ChonkerStonker" uid="12556129">
+  <member type="way" ref="853086108" role="outer"/>
+  <member type="way" ref="853086107" role="outer"/>
+  <member type="way" ref="853086106" role="outer"/>
+  <member type="way" ref="853086105" role="outer"/>
+  <member type="way" ref="853086104" role="outer"/>
+  <member type="way" ref="853086103" role="outer"/>
+  <member type="way" ref="853086102" role="outer"/>
+  <member type="way" ref="853085995" role="outer"/>
+  <member type="way" ref="853085996" role="outer"/>
+  <member type="way" ref="853085997" role="outer"/>
+  <member type="way" ref="853085955" role="outer"/>
+  <member type="way" ref="853085998" role="outer"/>
+  <member type="way" ref="853085999" role="outer"/>
+  <member type="way" ref="853085812" role="outer"/>
+  <member type="way" ref="853085814" role="outer"/>
+  <member type="way" ref="853086130" role="outer"/>
+  <member type="way" ref="853086131" role="outer"/>
+  <member type="way" ref="853086185" role="outer"/>
+  <member type="way" ref="853086134" role="outer"/>
+  <member type="way" ref="853086184" role="outer"/>
+  <member type="way" ref="853086138" role="outer"/>
+  <member type="way" ref="853086183" role="outer"/>
+  <member type="way" ref="853086139" role="outer"/>
+  <member type="way" ref="853086182" role="outer"/>
+  <member type="way" ref="853086141" role="outer"/>
+  <member type="way" ref="853086147" role="outer"/>
+  <member type="way" ref="853086148" role="outer"/>
+  <member type="way" ref="853086181" role="outer"/>
+  <member type="way" ref="853086161" role="outer"/>
+  <member type="way" ref="853086180" role="outer"/>
+  <member type="way" ref="853086164" role="outer"/>
+  <member type="way" ref="853086179" role="outer"/>
+  <member type="way" ref="853086178" role="outer"/>
+  <member type="way" ref="853086343" role="outer"/>
+  <member type="way" ref="853086342" role="outer"/>
+  <member type="way" ref="853086341" role="outer"/>
+  <member type="way" ref="853086109" role="outer"/>
+  <tag k="admin_level" v="6"/>
+  <tag k="boundary" v="administrative"/>
+  <tag k="name" v="City of Boroondara"/>
+  <tag k="place" v="municipality"/>
+  <tag k="population" v="181289"/>
+  <tag k="population:date" v="2018"/>
+  <tag k="ref:psma:lga_pid" v="VIC201"/>
+  <tag k="ref:vicmap:pfi" v="307"/>
+  <tag k="type" v="boundary"/>
+  <tag k="wikidata" v="Q894060"/>
+  <tag k="wikipedia" v="en:City of Boroondara"/>
+ </relation>
+</osm>
