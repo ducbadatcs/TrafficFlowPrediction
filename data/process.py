@@ -2,7 +2,7 @@
 import pandas as pd
 
 # process the scats data
-def process_scats_data(where: str = "./Scats Data October 2006.xls") -> pd.DataFrame:
+def process_scats_data(where: str) -> pd.DataFrame:
     sheets = pd.read_excel(where, sheet_name=None)
     removed_days = sheets["Notes"]["Unnamed: 1"].dropna().to_list()[5:]
     removed_days = [int(i) for i in removed_days]
@@ -28,4 +28,4 @@ def process_scats_data(where: str = "./Scats Data October 2006.xls") -> pd.DataF
     return df
 
 
-print(process_scats_data())
+# print(process_scats_data())
