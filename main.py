@@ -28,7 +28,9 @@ def MAPE(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     # Returns
         mape: Double, result data for train.
     """
-
+    
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
     y = [x for x in y_true if x > 0]
     y_pred = np.array([y_pred[i] for i in range(len(y_true)) if y_true[i] > 0])
 
@@ -44,7 +46,7 @@ def MAPE(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return mape
 
 
-def eva_regress(y_true, y_pred):
+def eva_regress(y_true: np.ndarray, y_pred: np.ndarray):
     """Evaluation
     evaluate the predicted resul.
 
