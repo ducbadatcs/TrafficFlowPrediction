@@ -2,7 +2,7 @@
 import pandas as pd
 
 # process the scats data
-def process_scats_data(where: str) -> pd.DataFrame:
+def process_scats_data(where: str = "./data/Scats Data October 2006.xls") -> pd.DataFrame:
     sheets = pd.read_excel(where, sheet_name=None)
     removed_days = sheets["Notes"]["Unnamed: 1"].dropna().to_list()[5:]
     removed_days = [int(i) for i in removed_days]
@@ -28,4 +28,10 @@ def process_scats_data(where: str) -> pd.DataFrame:
     return df
 
 
-# print(process_scats_data())
+def create_identifier_datasets(where: str = "./data/Scats Data October 2006.xls") -> None:
+    df = process_scats_data(where)
+    
+    for id, group in df.groupby(by="Identifier"):
+        group.to_csv(f"./data/scats/{id}.csv")
+        
+create_identifier_datasets()
