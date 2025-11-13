@@ -12,4 +12,7 @@ statsmodels
 xlrd
 pyrosm
 requests
-beautifulsoup
+beautifulsoup4
+osmnx 
+networkx 
+folium
