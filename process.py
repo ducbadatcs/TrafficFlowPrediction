@@ -36,9 +36,8 @@ def process() -> pd.DataFrame:
     df.to_csv("./data/scats.csv")
     return df
     
-def get_flow(df: pd.DataFrame) -> np.ndarray:
+def make_windows(df: pd.DataFrame) -> np.ndarray:
     vcols = [f"V{str(i).zfill(2)}" for i in range(96)]
-    import numpy as np
     DAY_LENGTH = 96 # intervals per day
     MONTH_LENGTH = 31 # days in oct
     d = {}
@@ -87,31 +86,8 @@ def make_dataset(windows: np.ndarray) -> List[np.ndarray]:
     print("y_test:", y_test.shape) 
     return [X_train, X_val, X_test, y_train, y_val, y_test]
 
-def fit_scaler(A: np.ndarray) -> StandardScaler:
-    return StandardScaler().fit(A.reshape(-1, 1))
 
-def normalize(scaler: StandardScaler, A: np.ndarray) -> np.ndarray:
-    return scaler.transform(A.reshape(-1, 1)).reshape(A.shape)
-
-# for predictions
-def denormalize(scaler: StandardScaler, A: np.ndarray) -> np.ndarray:
-    return scaler.inverse_transform(A.reshape(-1, 1)).reshape(A.shape)
-
-def make_normalized_dataset(windows: np.ndarray) -> List[np.ndarray]:
-    X_train, X_val, X_test, y_train, y_val, y_test = make_dataset(windows)
-    scaler = fit_scaler(X_train)
-    X_train_n, X_val_n, X_test_n = normalize(scaler, X_train), normalize(scaler, X_val), normalize(scaler, X_test)
-    y_train_n, y_val_n, y_test_n = normalize(scaler, y_train), normalize(scaler, y_val), normalize(scaler, y_test)
-    print("Shapes: ")
-    print("X_train:", X_train_n.shape)
-    print("X_val:", X_val_n.shape)
-    print("X_test:", X_test_n.shape)
-    print("y_train:", y_train_n.shape)
-    print("y_val:", y_val_n.shape)
-    print("y_test:", y_test_n.shape)
-    return [X_train_n, X_val_n, X_test_n, y_train_n, y_val_n, y_test_n]
-
-
+windows = make_windows(process())
 
 
 if __name__ == "__main__":

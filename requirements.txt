@@ -8,3 +8,6 @@ ipython
 tqdm
 ipywidgets
 matplotlib
+tensorflow
+xlrd
+pydot

@@ -1,26 +1,123 @@
 """
 Train the NN model.
 """
-import sys
-import warnings
+from sklearn import metrics
 import argparse
-import numpy as np
-import pandas as pd
 import keras
-from data.data import process_data
-from model import model
-from keras.models import Model
-from keras.callbacks import EarlyStopping
-from matplotlib import pyplot as plt
-from typing import Any, List
-warnings.filterwarnings("ignore")
+import numpy as np
+import os
+from keras.layers import LSTM, GRU, Dense, Input, Dropout, TimeDistributed, RepeatVector
+from keras.models import Sequential
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.saving import load_model
+from keras.utils import plot_model
+from process import windows, make_dataset
+from sklearn.preprocessing import StandardScaler
+from typing import Any, Dict
+import pandas as pd
 
-vcols = [f"V{str(i).zfill(2)}" for i in range(96)]
+def fit_scaler(A: np.ndarray) -> StandardScaler:
+    return StandardScaler().fit(A.reshape(-1, 1))
+
+def normalize(scaler: StandardScaler, A: np.ndarray) -> np.ndarray:
+    return scaler.transform(A.reshape(-1, 1)).reshape(A.shape)
+
+# for predictions
+def denormalize(scaler: StandardScaler, A: np.ndarray) -> np.ndarray:
+    return scaler.inverse_transform(A.reshape(-1, 1)).reshape(A.shape)
+
+X_train, X_val, X_test, y_train, y_val, y_test = make_dataset(windows)
+scaler = fit_scaler(X_train)
+X_train_n, X_val_n, X_test_n = normalize(scaler, X_train), normalize(scaler, X_val), normalize(scaler, X_test)
+y_train_n, y_val_n, y_test_n = normalize(scaler, y_train), normalize(scaler, y_val), normalize(scaler, y_test)
+
+NUM_WINDOW, WINDOW_LENGTH, NUM_LOCATION = windows.shape
+HORIZON = 24
+
+INPUT_SEQUENCE_LENGTH = WINDOW_LENGTH - HORIZON # 648
+OUTPUT_SEQUENCE_LENGTH = HORIZON # 24
+
+def get_lstm(input_seq_len: int, output_seq_len: int, num_locations: int) -> Any:
+    if os.path.exists("./model/lstm.keras"):
+        return load_model("./model/lstm.keras")
+
+    units = 256
+
+    model = Sequential([
+        Input(shape=(input_seq_len, num_locations)),
+
+        # Encoder
+        LSTM(units, return_sequences=False),
+        Dropout(0.2),
+
+        # Repeat context for decoder
+        RepeatVector(output_seq_len),
+
+        # Decoder
+        LSTM(units, return_sequences=True),
+        Dropout(0.1),
+
+        # Output projection
+        TimeDistributed(Dense(num_locations))
+    ])
+    
+    return model
+
+def get_gru(input_seq_len: int, output_seq_len: int, num_locations: int) -> Any:
+    if os.path.exists("./model/gru.keras"):
+        return load_model("./model/gru.keras")
+
+    units = 256
+
+    model = Sequential([
+        Input(shape=(input_seq_len, num_locations)),
+
+        # Encoder
+        GRU(units, return_sequences=False),
+        Dropout(0.2),
+
+        # Repeat context for decoder
+        RepeatVector(output_seq_len),
+
+        # Decoder
+        GRU(units, return_sequences=True),
+        Dropout(0.1),
+
+        # Output projection
+        TimeDistributed(Dense(num_locations))
+    ])
+    
+    return model
+
+def eva_regress(y_true: np.ndarray, y_pred: np.ndarray) -> None:
+    """Evaluation
+    evaluate the predicted resul.
+
+    # Arguments
+        y_true: List/ndarray, ture data.
+        y_pred: List/ndarray, predicted data.
+    """
+
+    y_pred = y_pred.flatten()
+    y_true = y_true.flatten()
+    # vs = metrics.explained_variance_score(y_true, y_pred)
+    # mape = metrics.mean_absolute_percentage_error(y_true, y_pred)
+    mae = metrics.mean_absolute_error(y_true, y_pred)
+    mse = metrics.mean_squared_error(y_true, y_pred)
+    r2 = metrics.r2_score(y_true, y_pred)
+    # print('explained_variance_score:%f' % vs)
+    # print('mape:%f%%' % mape)
+    print(f'mae: {mae}')
+    print(f'mse: {mse}' % mse)
+    print(f'rmse: {np.sqrt(mse)}')
+    print(f'r2: {r2}')
 
 
-
-
-def train_model(model: keras.Sequential, X_train: np.ndarray, y_train: np.ndarray, name: str, config: dict[str, Any]):
+def train_model(model: keras.Sequential, 
+                X_train: np.ndarray, y_train: np.ndarray, 
+                X_val: np.ndarray, y_val: np.ndarray,
+                X_test: np.ndarray, y_test: np.ndarray,
+                name: str, config: dict[str, Any] = {"epochs": 100, "batch_size": 32}):
     """train
     train a single model.
 
@@ -31,114 +128,97 @@ def train_model(model: keras.Sequential, X_train: np.ndarray, y_train: np.ndarra
         name: String, name of model.
         config: Dict, parameter for train.
     """
-
-    model.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
-    # early = EarlyStopping(monitor='val_loss', patience=30, verbose=0, mode='auto')
-    hist = model.fit(
+    
+    model.summary()
+    print(f"Plotted to ./images/{name}.png")
+    plot_model(
+        model, to_file=f"/kaggle/working/images/{name}.png", 
+        show_shapes=True, show_layer_names=True, expand_nested=True, dpi=90
+    )
+    model.compile(optimizer="adamw", loss="mse", metrics=['mape'])
+    callbacks = [
+        EarlyStopping(patience=10, restore_best_weights=True),
+        ReduceLROnPlateau(patience=5, factor=0.5)
+    ]
+    
+    history = model.fit(
         X_train, y_train,
-        batch_size=config["batch"],
-        epochs=config["epochs"],
-        validation_split=0.05)
+        epochs=config.get("epochs", 0),
+        batch_size=config.get("batch_size", 0),
+        validation_data=(X_val, y_val),
+        callbacks=callbacks,
+        verbose=1
+    )
 
-    model.save(f"model/{name}.keras")
-    df = pd.DataFrame.from_dict(hist.history)
+    model.save(f"./model/{name}.keras")
+    df = pd.DataFrame.from_dict(history.history)
     df.to_csv(f"model/{name}_loss.csv", encoding='utf-8', index=False)
+    # Print the final loss and validation loss
+    print(f"Final Training Loss (MSE): {history.history['loss'][-1]:.4f}")
+    print(f"Final Validation Loss (MSE): {history.history['val_loss'][-1]:.4f}")
+    # Print the final MAE and validation MAE
+    # print(f"Final Training MAE: {history.history['mae'][-1]:.4f}")
+    # print(f"Final Validation MAE: {history.history['val_mae'][-1]:.4f}")
     
-    # read loss
     
-    print(f"Metrics: {df.columns}")
-    # print(df.columns)
+    print(f"{name.upper()} predictions:")
+    y_pred = np.array(model.predict(y_test))
+    assert y_pred.shape == y_test.shape, "something fishy..."
     
+    # yeah they should all be normalized
+    print("Predictions:")
+    print("Normalized:")
+    eva_regress(y_test, y_pred)
     
-    
+    print("Denomalized:")
+    y_test = denormalize(scaler, y_test)
+    y_pred = denormalize(scaler, y_pred)
+    eva_regress(y_test, y_pred)
 
 
-def train_seas(models: List[keras.Sequential], X_train: np.ndarray, y_train: np.ndarray, name:str , config: dict[str, Any]) -> None:
-    """train
-    train the SAEs model.
-
-    # Arguments
-        models: List, list of SAE model.
-        X_train: ndarray(number, lags), Input data for train.
-        y_train: ndarray(number, ), result data for train.
-        name: String, name of model.
-        config: Dict, parameter for train.
-    """
-
-    temp = X_train
-    # early = EarlyStopping(monitor='val_loss', patience=30, verbose=0, mode='auto')
-
-    for i in range(len(models) - 1):
-        if i > 0:
-            p = models[i - 1]
-            hidden_layer_model = Model(inputs=p.inputs,
-                                       outputs=p.get_layer('hidden').output)
-            temp = hidden_layer_model.predict(temp)
-
-        m = models[i]
-        m.compile(loss="mse", optimizer="rmsprop", metrics=['mape'])
-
-        m.fit(temp, y_train, batch_size=config["batch"],
-              epochs=config["epochs"],
-              validation_split=0.05)
-
-        models[i] = m
-
-    saes = models[-1]
-    for i in range(len(models) - 1):
-        weights = models[i].get_layer('hidden').get_weights()
-        saes.get_layer(f'hidden{i + 1}').set_weights(weights)
-
-    train_model(saes, X_train, y_train, name, config)
-    
-def plot_loss(model_name: str) -> None:
-    df = pd.read_csv(f"model/{model_name}_loss.csv")
-    plt.title(f"{model_name.upper()} model training loss over time")
-    plt.xlabel("Epoch")
-    plt.ylabel("loss")
-    plt.legend()
-    plt.plot(np.arange(len(df["loss"][1:])), df["loss"][1:], label="MSE Loss")
-    plt.savefig(f"model/{model_name}_loss_graph.png")
-    
-
+import sys  # <- you forgot this and Python will yell at you
 
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--model",
         default="lstm",
-        help="Model to train.")
+        choices=["lstm", "gru"],
+        help="Which model architecture to train."
+    )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=100,
+        help="Number of training epochs."
+    )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=32,
+        help="Training batch size."
+    )
     args = parser.parse_args()
 
-    lag: int = 12
-    config: dict[str, Any] = {"batch": 256, "epochs": 600}
-    file1 = 'data/train.csv'
-    file2 = 'data/test.csv'
-    X_train, y_train, _, _, _ = process_data(file1, file2, lag)
-    print(X_train)
-    print(y_train)
-    if args.model == 'lstm':
-        X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-        m = model.get_lstm([lag, 64, 64, 1])
-        train_model(m, X_train, y_train, args.model, config)
-        plot_loss(args.model)
-    elif args.model == 'gru':
-        X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-        m = model.get_gru([lag, 64, 64, 1])
-        train_model(m, X_train, y_train, args.model, config)
-        plot_loss(args.model)
-    elif args.model == 'saes':
-        X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1]))
-        m = model.get_saes([lag, 400, 400, 400, 1])
-        train_seas(m, X_train, y_train, args.model, config)
-        plot_loss(args.model)
-    elif args.model == "cnn":
-        X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-        m = model.get_cnn([lag, 64, 64, 1])
-        train_model(m, X_train, y_train, args.model, config)
-        plot_loss(args.model)
-    
+    # select model
+    if args.model == "lstm":
+        model = get_lstm(INPUT_SEQUENCE_LENGTH, OUTPUT_SEQUENCE_LENGTH, NUM_LOCATION)
+    else:
+        model = get_gru(INPUT_SEQUENCE_LENGTH, OUTPUT_SEQUENCE_LENGTH, NUM_LOCATION)
 
+    config = {
+        "epochs": args.epochs,
+        "batch_size": args.batch_size
+    }
+
+    train_model(
+        model,
+        X_train_n, y_train_n,
+        X_val_n, y_val_n,
+        X_test_n, y_test_n,
+        args.model,
+        config
+    )
 
 if __name__ == '__main__':
     main(sys.argv)

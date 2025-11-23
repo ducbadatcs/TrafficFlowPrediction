@@ -1,108 +1,59 @@
-"""
-Traffic Flow Prediction with Neural Networks(SAEs、LSTM、GRU).
-"""
-import os
-import math
-import warnings
-import numpy as np
-import pandas as pd
-from data.data import process_data
-# from keras.models import load_model
-from keras import Sequential
-from keras.saving import load_model
-from keras.utils import plot_model
-import sklearn.metrics as metrics
-
-from matplotlib.dates import AutoDateFormatter
-import matplotlib.pyplot as plt
 from typing import Any
-warnings.filterwarnings("ignore")
+import numpy as np
+from process import windows
+from train import get_gru, get_lstm, NUM_WINDOW, WINDOW_LENGTH, NUM_LOCATION, HORIZON, INPUT_SEQUENCE_LENGTH, OUTPUT_SEQUENCE_LENGTH
+import streamlit as st
+import numpy as np
+from datetime import datetime, timedelta
 
+lstm = get_lstm(INPUT_SEQUENCE_LENGTH, OUTPUT_SEQUENCE_LENGTH, NUM_LOCATION)
+gru = get_gru(INPUT_SEQUENCE_LENGTH, OUTPUT_SEQUENCE_LENGTH, NUM_LOCATION)
 
-def MAPE(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    """Mean Absolute Percentage Error
-    Calculate the mape.
-
-    # Arguments
-        y_true: List/ndarray, ture data.
-        y_pred: List/ndarray, predicted data.
-    # Returns
-        mape: Double, result data for train.
-    """
+def predict_future(model, last_window, num_steps_ahead, step_size=24):
+    current_window = last_window.copy()  # shape (1, WINDOW_LENGTH, 137)
+    all_predictions = []
     
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
-    y = [x for x in y_true if x > 0]
-    y_pred = np.array([y_pred[i] for i in range(len(y_true)) if y_true[i] > 0])
-
-    num: int = len(y_pred)
-    sums: float = 0
-
-    for i in range(num):
-        tmp = abs(y[i] - y_pred[i]) / y[i]
-        sums += tmp
-
-    mape = sums * (100 / num)
-
-    return mape
+    while len(all_predictions) < num_steps_ahead:
+        pred = model.predict(current_window, verbose=0)  # (1, 24, 137)
+        all_predictions.append(pred[0])  # (24, 137)
+        
+        # Shift: remove first 24 timesteps, add last 24 predictions
+        current_window = np.concatenate([
+            current_window[:, step_size:, :],  # Remove first 24
+            pred  # Add predictions
+        ], axis=1)
+    
+    return np.vstack(all_predictions)[:num_steps_ahead]
 
 
-def eva_regress(y_true: np.ndarray, y_pred: np.ndarray):
-    """Evaluation
-    evaluate the predicted resul.
-
-    # Arguments
-        y_true: List/ndarray, ture data.
-        y_pred: List/ndarray, predicted data.
-    """
-
-    mape = MAPE(y_true, y_pred)
-    vs = metrics.explained_variance_score(y_true, y_pred)
-    mae = metrics.mean_absolute_error(y_true, y_pred)
-    mse = metrics.mean_squared_error(y_true, y_pred)
-    r2 = metrics.r2_score(y_true, y_pred)
-    print('explained_variance_score:%f' % vs)
-    print('mape:%f%%' % mape)
-    print('mae:%f' % mae)
-    print('mse:%f' % mse)
-    print('rmse:%f' % math.sqrt(mse))
-    print('r2:%f' % r2)
 
 
-def plot_results(y_true: np.ndarray, y_preds: np.ndarray, names: list[Any]):
-    """Plot
-    Plot the true data and predicted data.
+# Your model + data should already be imported here.
+# from your_module import predict_future, lstm, windows
 
-    # Arguments
-        y_true: List/ndarray, ture data.
-        y_pred: List/ndarray, predicted data.
-        names: List, Method names.
-    """
-    d = '2016-3-4 00:00'
-    x = pd.date_range(d, periods=288, freq='5min')
+st.title("Traffic Flow Prediction")
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+NUM_LOCATIONS = 137
+BASE_TIME = datetime(2006, 10, 1, 0, 0)
+DELTA_MINUTES = 15
 
-    ax.plot(x, y_true, label='True Data')
-    for name, y_pred in zip(names, y_preds):
-        ax.plot(x, y_pred, label=name)
+def timestamp_to_datetime(ts):
+    return BASE_TIME + timedelta(minutes=ts * DELTA_MINUTES)
 
-    plt.legend()
-    plt.grid(True)
-    plt.xlabel('Time of Day')
-    plt.ylabel('Flow')
+location = st.sidebar.number_input("Location ID", min_value=0, max_value=NUM_LOCATIONS - 1, value=0)
+num_steps = st.sidebar.slider("Number of prediction timestamps", min_value=1, max_value=100, value=24)
 
-    date_format = AutoDateFormatter("%H:%M")
-    ax.xaxis.set_major_formatter(date_format)
-    fig.autofmt_xdate()
+if st.sidebar.button("Predict"):
+    # Run model prediction
+    result = predict_future(lstm, windows[-1:], num_steps)
+    predictions = [r[location] for r in result]
 
-    plt.show()
+    start_ts = len(windows) * 24
+    times = [timestamp_to_datetime(start_ts + i * 15) for i in range(num_steps)]
 
+    st.subheader(f"Predictions for Location {location}")
+    st.line_chart(predictions)
 
-def main():
-    if os.path.exists("scats.csv")
-
-
-if __name__ == '__main__':
-    main()
+    st.write("Predictions:")
+    for t, pred in zip(times, predictions):
+        st.write(f"{t}: {pred:.2f}")

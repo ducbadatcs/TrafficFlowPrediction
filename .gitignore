@@ -1,11 +1,15 @@
 # Created by venv; see https://docs.python.org/3/library/venv.html
 
-# venv nonsense
-/etc
-/include
-/lib 
-/lib64 
-/bin
-/share
+# windows gitignore
+Lib/
+Scripts/
+Include/
+
+# linux gitignore
+lib/
+lib64/
+bin/
 
 pyvenv.cfg
+data/__pycache__/
+__pycache__/
