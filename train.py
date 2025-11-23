@@ -15,6 +15,10 @@ from matplotlib import pyplot as plt
 from typing import Any, List
 warnings.filterwarnings("ignore")
 
+vcols = [f"V{str(i).zfill(2)}" for i in range(96)]
+
+
+
 
 def train_model(model: keras.Sequential, X_train: np.ndarray, y_train: np.ndarray, name: str, config: dict[str, Any]):
     """train

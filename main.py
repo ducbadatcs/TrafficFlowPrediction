@@ -1,6 +1,7 @@
 """
 Traffic Flow Prediction with Neural Networks(SAEs、LSTM、GRU).
 """
+import os
 import math
 import warnings
 import numpy as np
@@ -100,35 +101,7 @@ def plot_results(y_true: np.ndarray, y_preds: np.ndarray, names: list[Any]):
 
 
 def main():
-    lstm = load_model('model/lstm.keras')
-    gru = load_model('model/gru.keras')
-    saes = load_model('model/saes.keras')
-    cnn = load_model("model/cnn.keras")
-    print(type(lstm))
-    models = [Sequential(i) for i in [lstm, gru, saes, cnn]]
-    names = ['LSTM', 'GRU', 'SAEs', "CNN"]
-
-    lag = 12
-    file1 = 'data/train.csv'
-    file2 = 'data/test.csv'
-    _, _, X_test, y_test, scaler = process_data(file1, file2, lag)
-    y_test = scaler.inverse_transform(y_test.reshape(-1, 1)).reshape(1, -1)[0]
-
-    y_preds = []
-    for name, model in zip(names, models):
-        if name == 'SAEs':
-            X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1]))
-        else:
-            X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
-        file = 'images/' + name + '.png'
-        plot_model(model, to_file=file, show_shapes=True)
-        predicted = model.predict(X_test)
-        predicted = scaler.inverse_transform(predicted.reshape(-1, 1)).reshape(1, -1)[0]
-        y_preds.append(predicted[:288])
-        print(name)
-        eva_regress(y_test, predicted)
-
-    plot_results(y_test[: 288], np.array(y_preds), names)
+    if os.path.exists("scats.csv")
 
 
 if __name__ == '__main__':
