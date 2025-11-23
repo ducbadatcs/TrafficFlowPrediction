@@ -7,3 +7,5 @@
 /lib64 
 /bin
 /share
+
+pyvenv.cfg
