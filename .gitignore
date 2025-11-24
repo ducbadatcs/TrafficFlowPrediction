@@ -9,7 +9,11 @@ Include/
 lib/
 lib64/
 bin/
+include/
+share/
 
 pyvenv.cfg
 data/__pycache__/
 __pycache__/
+
+.gradio

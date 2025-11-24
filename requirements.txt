@@ -1,8 +1,9 @@
+# must have
 scikit-learn
-streamlit
-keras
-pandas 
+pandas
 numpy
+
+# model stuff
 ipykernel
 ipython
 tqdm
@@ -11,3 +12,10 @@ matplotlib
 tensorflow
 xlrd
 pydot
+
+# UI
+streamlit
+gradio
+
+
+

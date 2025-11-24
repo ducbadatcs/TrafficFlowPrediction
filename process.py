@@ -36,7 +36,7 @@ def process() -> pd.DataFrame:
     df.to_csv("./data/scats.csv")
     return df
     
-def make_windows(df: pd.DataFrame) -> np.ndarray:
+def make_flow(df: pd.DataFrame) -> pd.DataFrame:
     vcols = [f"V{str(i).zfill(2)}" for i in range(96)]
     DAY_LENGTH = 96 # intervals per day
     MONTH_LENGTH = 31 # days in oct
@@ -48,8 +48,12 @@ def make_windows(df: pd.DataFrame) -> np.ndarray:
         d[id] = flow
     d = {i: np.array(d[i]) for i in d}
     flow = pd.DataFrame(d)
+    return flow
+
+def make_windows(flow: pd.DataFrame) -> np.ndarray:
     data = flow.to_numpy().astype(float)
     windows = []
+    DAY_LENGTH = 96 # intervals per day
     WEEK_LENGTH = DAY_LENGTH * 7  # 1 week
     WINDOW_LENGTH = WEEK_LENGTH
     for i in range(WINDOW_LENGTH, len(data) + 1):
@@ -87,7 +91,17 @@ def make_dataset(windows: np.ndarray) -> List[np.ndarray]:
     return [X_train, X_val, X_test, y_train, y_val, y_test]
 
 
-windows = make_windows(process())
+df = process()
+flow = make_flow(df)
+windows = make_windows(flow)
+scats = {}
+for i, v in enumerate(flow.columns):
+    z = v[:4]
+    if scats.get(z) is None:
+        scats[z] = [i]
+    else:
+        scats[z].append(i)
+
 
 
 if __name__ == "__main__":
