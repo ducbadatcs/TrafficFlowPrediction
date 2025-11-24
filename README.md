@@ -1,12 +1,8 @@
 '
+
 Forked from [here](https://github.com/xiaochus/TrafficFlowPrediction)
 
-How to setup:
-
-- clone this repo. Use Python 3.13 (or whatever, 3.13 is preferred)
-- create a venv: `python -m venv .`
-- Activate the venv: `./Scripts/Activate.ps1`
-- Install packages: `pip install -r requirements.txt`
+# Traffic flow Prediction System
 
 Authors:
 
@@ -21,4 +17,13 @@ Running guide:
   - or enter `http://127.0.0.1:7860/` if that link works.
 - Enjoy!
 
-Note: There's a Kaggle notebook if you want to see the training process, since my laptop doesn't have GPU support. Pretrained weights `/model/*.keras` were included.
+# Kaggle Notebooks
+
+Note: There's a Kaggle notebook if you want to see the training process, since my laptop doesn't have GPU support. Pretrained weights `/model/*.keras` were included if you want model local inference.
+
+Kaggle notebooks:
+
+- [trainer](https://www.kaggle.com/code/w2nrp2tfb/trainer), used for demonstration.
+- [trainer 2](https://www.kaggle.com/code/w2nrp2tfb/trainer-2), more similar to the actual code.
+
+They use the data provided by `boroondara2006.zip`, or the `data/` folder. For convenience, they are also downloaded here.

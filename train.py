@@ -176,7 +176,7 @@ def train_model(model: keras.Sequential,
     eva_regress(y_test, y_pred)
 
 
-import sys  # <- you forgot this and Python will yell at you
+import sys 
 
 def main(argv):
     parser = argparse.ArgumentParser()
