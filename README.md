@@ -27,3 +27,8 @@ Kaggle notebooks:
 - [trainer 2](https://www.kaggle.com/code/w2nrp2tfb/trainer-2), more similar to the actual code.
 
 They use the data provided by `boroondara2006.zip`, or the `data/` folder. For convenience, they are also downloaded here.
+
+# Other Links:
+
+- Report: https://docs.google.com/document/d/1RhNKwta_dEkDoBVj0KPk6JPTmrcMJei_wwDdkJebqOs/edit?usp=sharing
+- Slides: https://docs.google.com/presentation/d/1JdORTSHtRyzWRiWo-Z6-4UgOW9tXkSqf/edit?usp=sharing&ouid=110314531860417001009&rtpof=true&sd=true
